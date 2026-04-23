@@ -53,7 +53,7 @@ export default {
     return new Response("Daily Digest Bot is running ✅");
   },
 
-  /** Cron 핸들러 — 매일 22:30 UTC = 07:30 KST */
+  /** Cron 핸들러 — 매일 09:00 UTC = 18:00 KST */
   async scheduled(_event: ScheduledEvent, env: Env, ctx: ExecutionContext): Promise<void> {
     ctx.waitUntil(runDailyPipeline(env));
   },

@@ -25,7 +25,7 @@ export function formatDailyDigest(items: SummaryItem[], date: string): string {
     sections.push(`${emoji} <b>${label}</b>\n${lines.join("\n")}`);
   }
 
-  const header = `📰 <b>오늘의 소식 (${date} · 08:00 KST)</b>`;
+  const header = `📰 <b>오늘의 소식 (${date} · 18:00 KST)</b>`;
   const footer = `\n────────────────\n총 ${items.length}건`;
 
   return [header, "", ...sections, footer].join("\n");

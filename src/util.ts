@@ -2,6 +2,20 @@
 // 공통 유틸리티
 // ============================================================
 
+// 상수
+export const DEDUP_TTL_SECONDS = 30 * 24 * 60 * 60;
+export const DEDUP_PREFIX = { URL: "seen:", MESSAGE_ID: "msgid:" } as const;
+export const CONFIDENCE_THRESHOLD = 0.75;
+
+/** SHA-256 해시 생성 (prefix + 길이 제어) */
+export async function hashWithPrefix(raw: string, prefix: string, length: number = 32): Promise<string> {
+  const data = new TextEncoder().encode(raw.trim());
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hex = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+  return prefix + hex.slice(0, length);
+}
+
 /** Telegram/HTML 특수문자 이스케이프 (텍스트 + 속성값 모두 안전) */
 export function escapeHtml(str: string): string {
   return str

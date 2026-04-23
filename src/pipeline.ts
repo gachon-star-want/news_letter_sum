@@ -1,7 +1,7 @@
 import type { ContentItem, Env, SummaryItem } from "./types";
 import { getSources } from "./sources";
 import { fetchYoutubeVideos } from "./fetchers/youtube";
-import { fetchPendingNewsletters, fetchRssNewsletters } from "./fetchers/newsletter";
+import { fetchPendingNewsletters } from "./fetchers/newsletter";
 import { filterSeen, markAllSeen } from "./deduplicator";
 import { summarizeWithFallback } from "./summarizer/index";
 import { saveSummaries, cleanupOldData } from "./archive";
@@ -9,7 +9,7 @@ import { formatDailyDigest } from "./formatter";
 import { sendToMe, sendError } from "./telegram";
 import { todayKST } from "./util";
 
-/** 매일 07:30 KST Cron 트리거 → 여기서 전체 파이프라인 실행 */
+/** 매일 18:00 KST Cron 트리거 → 여기서 전체 파이프라인 실행 */
 export async function runDailyPipeline(env: Env): Promise<void> {
   const today = todayKST();
 
@@ -18,12 +18,11 @@ export async function runDailyPipeline(env: Env): Promise<void> {
   try {
     // ① 소스 목록 + 콘텐츠 수집 병렬 실행
     const sources = await getSources(env);
-    const [youtubeItems, emailItems, rssItems] = await Promise.all([
+    const [youtubeItems, emailItems] = await Promise.all([
       fetchAllYoutube(sources.youtube, env, maxItems),
       fetchPendingNewsletters(env),
-      fetchRssNewsletters(env),
     ]);
-    const newsletterItems = [...emailItems, ...rssItems];
+    const newsletterItems = emailItems;
 
     const allItems: ContentItem[] = [...youtubeItems, ...newsletterItems];
 

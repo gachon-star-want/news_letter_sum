@@ -1,11 +1,10 @@
 import type { LLMProvider } from "./index";
-import { fetchWithTimeout } from "../util";
+import { fetchWithTimeout, CONFIDENCE_THRESHOLD } from "../util";
 
 interface AnthropicResponse {
   content: Array<{ type: string; text: string }>;
 }
 
-// Haiku: 자신감 점수와 함께 요약 반환
 const HAIKU_SYSTEM_KO = `다음 내용을 한국어로 30~50자 이내 한 줄로 핵심만 요약해줘.
 반드시 아래 JSON 형식으로만 응답해:
 {"summary":"요약문","confidence":0.0~1.0}
@@ -16,7 +15,6 @@ Respond only in this JSON format:
 {"summary":"Korean summary","confidence":0.0~1.0}
 confidence is your certainty from 0 (uncertain) to 1 (certain).`;
 
-// Opus: 초안을 검수하여 최종 요약 생성 (자신감 낮을 때만 호출)
 const OPUS_SYSTEM_KO = `아래 기사 내용과 초안 요약을 보고, 30~50자 이내 한 줄 한국어 요약을 최종 완성해줘. 요약문만 출력하고 다른 말은 하지 마.`;
 const OPUS_SYSTEM_EN = `Review the article and the draft summary below. Output only the final Korean summary in 30-50 characters.`;
 
@@ -30,12 +28,9 @@ export class ClaudeProvider implements LLMProvider {
 
   async summarize(body: string, language: "ko" | "en"): Promise<string> {
     const content = body.slice(0, 3000);
-
-    // 단계 1: Haiku가 요약 + 자신감 점수 반환
     const haikusResult = await this.callHaiku(content, language);
 
-    // 단계 2: 자신감 < 0.75이면 Opus가 검수/개선
-    if (haikusResult.confidence < 0.75) {
+    if (haikusResult.confidence < CONFIDENCE_THRESHOLD) {
       return await this.callOpus(content, haikusResult.summary, language);
     }
 
@@ -77,13 +72,17 @@ export class ClaudeProvider implements LLMProvider {
 
     try {
       const parsed = JSON.parse(text.trim());
+      if (!parsed.summary) {
+        console.warn("Haiku: missing 'summary' field in JSON response", { text });
+        return { summary: "", confidence: 0.3 };
+      }
       return {
-        summary: parsed.summary || "",
-        confidence: typeof parsed.confidence === "number" ? parsed.confidence : 0.5,
+        summary: parsed.summary,
+        confidence: Math.min(1, Math.max(0, parsed.confidence ?? 0.5)),
       };
-    } catch {
-      // JSON 파싱 실패 시 신뢰도 0.5로 설정 (Opus 검수 트리거)
-      return { summary: text.trim(), confidence: 0.5 };
+    } catch (err) {
+      console.error("Haiku: JSON parse failed", { error: err, text });
+      return { summary: "", confidence: 0.2 };
     }
   }
 

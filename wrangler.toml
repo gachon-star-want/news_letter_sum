@@ -3,9 +3,9 @@ main = "src/index.ts"
 compatibility_date = "2024-11-01"
 compatibility_flags = ["nodejs_compat"]
 
-# 매일 07:30 KST (22:30 UTC) 자동 실행
+# 매일 18:00 KST (09:00 UTC) 자동 실행
 [triggers]
-crons = ["30 22 * * *"]
+crons = ["0 9 * * *"]
 
 # 중복 체크용 KV 저장소
 # 생성 방법: npx wrangler kv namespace create DEDUP_KV

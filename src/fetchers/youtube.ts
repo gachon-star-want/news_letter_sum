@@ -11,7 +11,7 @@ export async function fetchYoutubeVideos(
   apiKey: string,
   maxResults: number = 5
 ): Promise<ContentItem[]> {
-  const publishedAfter = new Date(Date.now() - 25 * 60 * 60 * 1000).toISOString(); // 25시간 전
+  const publishedAfter = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(); // 24시간 전
 
   const params = new URLSearchParams({
     part: "snippet",

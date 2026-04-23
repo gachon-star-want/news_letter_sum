@@ -8,9 +8,9 @@ import { fetchWithTimeout } from "./util";
 
 export interface SourceRecord {
   id: number;
-  type: "newsletter" | "rss" | "youtube";
+  type: "newsletter" | "youtube";
   name: string;
-  identifier: string; // newsletter: 발신 이메일 | rss: 피드 URL | youtube: channelId
+  identifier: string; // newsletter: 발신 이메일 | youtube: channelId
   language: "ko" | "en";
   active: number;
 }
@@ -18,7 +18,6 @@ export interface SourceRecord {
 /** 활성 소스 목록 반환 */
 export async function getSources(env: Env): Promise<{
   newsletters: Array<{ name: string; emailFrom: string; language: "ko" | "en" }>;
-  rssFeeds: Array<{ name: string; rssUrl: string; language: "ko" | "en" }>;
   youtube: Array<{ name: string; channelId: string; language: "ko" | "en" }>;
 }> {
   const { results } = await env.ARCHIVE_DB.prepare(
@@ -29,9 +28,6 @@ export async function getSources(env: Env): Promise<{
     newsletters: results
       .filter((r) => r.type === "newsletter")
       .map((r) => ({ name: r.name, emailFrom: r.identifier, language: r.language })),
-    rssFeeds: results
-      .filter((r) => r.type === "rss")
-      .map((r) => ({ name: r.name, rssUrl: r.identifier, language: r.language })),
     youtube: results
       .filter((r) => r.type === "youtube")
       .map((r) => ({ name: r.name, channelId: r.identifier, language: r.language })),
@@ -57,20 +53,6 @@ export async function addNewsletterSource(
     "INSERT INTO sources (type, name, identifier, language, active, created_at) VALUES ('newsletter', ?, ?, ?, 1, ?)"
   )
     .bind(name, emailFrom.toLowerCase(), language, Date.now())
-    .run();
-}
-
-/** RSS 피드 소스 추가 */
-export async function addRssSource(
-  name: string,
-  rssUrl: string,
-  language: "ko" | "en",
-  env: Env
-): Promise<void> {
-  await env.ARCHIVE_DB.prepare(
-    "INSERT INTO sources (type, name, identifier, language, active, created_at) VALUES ('rss', ?, ?, ?, 1, ?)"
-  )
-    .bind(name, rssUrl, language, Date.now())
     .run();
 }
 
