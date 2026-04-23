@@ -6,7 +6,10 @@
 
 - **뉴스레터 수집** — RSS 피드 또는 이메일(Cloudflare Email Routing, 도메인 필요)
 - **유튜브 수집** — 채널 최신 영상 자막/설명 기반 요약
-- **AI 요약** — Claude Haiku + Opus Advisor + Prompt Caching으로 빠르고 정확하게, 비용 최소화
+- **AI 요약** — Claude Haiku + Opus Advisor + Prompt Caching
+  - Haiku: 빠르고 저렴한 주요 요약 (자신감 점수 함께 제공)
+  - Opus Advisor: 자신감 < 0.75인 경우만 자동 검수/개선
+  - 캐싱: 시스템 프롬프트 캐싱으로 입력 토큰 90% 절감
 - **텔레그램 발송** — 매일 오전 8시 KST 자동 발송
 - **봇 명령어** — 텔레그램에서 소스 추가/삭제/검색 가능
 - **중복 제거** — KV TTL 기반으로 같은 콘텐츠 재발송 방지
@@ -103,8 +106,15 @@ https://uppity.co.kr          ← 봇에게 URL만 보내면 RSS 자동 감지
 | Cloudflare Workers | 무료 (10만 req/일 이내) |
 | Cloudflare D1 | 무료 (5GB 이내) |
 | Cloudflare KV | 무료 (10만 read/일 이내) |
-| Claude API (Haiku + Prompt Caching) | 약 $0.01 미만 (캐싱으로 입력 토큰 90% 절감) |
+| Claude API (Haiku + Opus Advisor) | **$2.10 ~ $3.50** (Advisor Strategy: Haiku 자신감 기반 조건부 Opus 호출, 약 10~20% 에스컬레이션) |
 | YouTube Data API | 무료 (10,000 units/일 이내) |
+
+### Advisor Strategy로 비용 최적화
+
+- **Haiku 주 실행**: 대부분의 뉴스/영상은 명확하므로 저비용 Haiku만 사용
+- **자신감 기반 검수**: 내용이 복잡하거나 불명확한 경우(confidence < 0.75)만 Opus가 자동 검수
+- **Prompt Caching**: 시스템 프롬프트는 캐싱되어 90% 입력 토큰 절감
+- **결과**: Sonnet 단독($3.04)과 유사한 비용에 Opus 수준의 품질 보장
 
 ## 라이선스
 
