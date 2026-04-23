@@ -1,0 +1,36 @@
+name = "daily-digest-bot"
+main = "src/index.ts"
+compatibility_date = "2024-11-01"
+compatibility_flags = ["nodejs_compat"]
+
+# 매일 07:30 KST (22:30 UTC) 자동 실행
+[triggers]
+crons = ["30 22 * * *"]
+
+# 중복 체크용 KV 저장소
+# 생성 방법: npx wrangler kv namespace create DEDUP_KV
+[[kv_namespaces]]
+binding = "DEDUP_KV"
+id = "REPLACE_WITH_YOUR_KV_ID"
+preview_id = "REPLACE_WITH_YOUR_KV_PREVIEW_ID"
+
+# 요약 아카이브 + 검색용 D1 DB
+# 생성 방법: npx wrangler d1 create daily-digest
+[[d1_databases]]
+binding = "ARCHIVE_DB"
+database_name = "daily-digest"
+database_id = "REPLACE_WITH_YOUR_D1_ID"
+
+# 환경 변수 (민감하지 않은 것만)
+[vars]
+LLM_PROVIDER = "claude"          # "claude" | "openai"
+MAX_ITEMS_PER_SOURCE = "5"       # 소스당 최대 항목 수
+
+# 시크릿 (아래 명령어로 등록):
+# npx wrangler secret put TELEGRAM_BOT_TOKEN
+# npx wrangler secret put TELEGRAM_CHAT_ID
+# npx wrangler secret put TELEGRAM_WEBHOOK_SECRET      # ← 아래 명령어로 랜덤 생성해서 등록
+#                                                       openssl rand -hex 32
+# npx wrangler secret put ANTHROPIC_API_KEY
+# npx wrangler secret put YOUTUBE_API_KEY
+# npx wrangler secret put OPENAI_API_KEY                # 선택 (Claude 장애 시 fallback)
